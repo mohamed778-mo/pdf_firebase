@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 var UploadsSchema = new mongoose.Schema({
     name:{
         type:String,
-        required:true,
+      
       
     },
     pdf:{
