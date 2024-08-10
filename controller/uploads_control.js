@@ -78,18 +78,23 @@ res.status(200).send(pdf_det)
 }catch(e){res.status(500).send(e.message)}
 
 }
+const delete_pdf = async (req, res) => {
+  try {
+    const pdf_id = req.params.pdf_id;
+    const pdf_det = await Uploads.findByIdAndDelete(pdf_id);
 
-const delete_pdf = async (req,res)=>{
-
-    try{
-    const pdf_id = req.params.pdf_id
-    await Uploads.findByIdAndDelete(pdf_id)
-    
-    res.status(200).send("delete is success !!")
-    
-    }catch(e){res.status(500).send(e.message)}
-    
-}
+    if (pdf_det) {
+      const bucket = admin.storage().bucket();
+      const file = bucket.file(pdf_det.filename);
+      await file.delete();
+      res.status(200).send("Delete is successful!!");
+    } else {
+      res.status(404).send("PDF not found.");
+    }
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+};
 
 const get_pdfs =  async (req,res)=>{
 
