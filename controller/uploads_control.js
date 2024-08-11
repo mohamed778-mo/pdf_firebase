@@ -47,6 +47,7 @@ const upload_pdf =async (req, res) => {
         const save_data = new Uploads({
             name : pdf_name,
             pdf : publicUrl,
+            file_name:blob.name
          
         
         })
@@ -84,9 +85,9 @@ const delete_pdf = async (req, res) => {
     const pdf_det = await Uploads.findByIdAndDelete(pdf_id);
 
     if (pdf_det) {
-      if (pdf_det.pdf) {
+      if (pdf_det.file_name) {
         const bucket = admin.storage().bucket();
-        const file = bucket.file(pdf_det.pdf);
+        const file = bucket.file(pdf_det.file_name);
         await file.delete();
         res.status(200).send("Delete is successful!!");
       } else {
