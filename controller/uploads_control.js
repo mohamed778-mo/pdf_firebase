@@ -84,10 +84,14 @@ const delete_pdf = async (req, res) => {
     const pdf_det = await Uploads.findByIdAndDelete(pdf_id);
 
     if (pdf_det) {
-      const bucket = admin.storage().bucket();
-      const file = bucket.file(pdf_det.filename);
-      await file.delete();
-      res.status(200).send("Delete is successful!!");
+      if (pdf_det.pdf) {
+        const bucket = admin.storage().bucket();
+        const file = bucket.file(pdf_det.pdf);
+        await file.delete();
+        res.status(200).send("Delete is successful!!");
+      } else {
+        res.status(400).send("PDF filename not specified in the document.");
+      }
     } else {
       res.status(404).send("PDF not found.");
     }
