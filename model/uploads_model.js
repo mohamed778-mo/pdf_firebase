@@ -9,7 +9,10 @@ var UploadsSchema = new mongoose.Schema({
     },
     pdf:{
         type:String
-    }
+    },
+    file_name:{
+       type:String,
+}
     
 });
 
