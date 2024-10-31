@@ -1,49 +1,27 @@
 const admin = require('firebase-admin');
 const fs = require('fs');
 const Uploads = require("../model/uploads_model")
-
+const path = require("path");
 require('dotenv').config();
 
-const serviceAccount =JSON.parse(process.env.SERVER)
+// const serviceAccount =JSON.parse(process.env.SERVER)
 
 
 
 const upload_pdf =async (req, res) => {
-    try{
+  try{
     const file = req.files.find(f => f.fieldname === 'file')
     if (!file) {
       return res.status(400).send('No file uploaded.');
     }
   if (file) {
-          if (!admin.apps.length) {
-            admin.initializeApp({
-              credential: admin.credential.cert(serviceAccount),
-              storageBucket: process.env.STORAGE_BUCKET
-            });
-          }
-    
-    const bucket = admin.storage().bucket();
-    const blob = bucket.file(file.filename);
-    const blobStream = blob.createWriteStream({
-      metadata: {
-        contentType: 'application/pdf'
-      }
-    });
-            const pdf_name = req.body.name
-        
-    blobStream.on('error', (err) => {
-      console.error(err);
-      res.status(500).send('Error uploading file.');
-    });
-  
-    blobStream.on('finish', () => {
-        
 
-        blob.makePublic().then(async () => {
-            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-            fs.unlinkSync(file.path); 
-       
-          
+          const pdf_name = req.body.name
+        
+    
+            const publicUrl = `https://eltodi.genuisweb.com/uploads/${file.filename}`; 
+
+                   
         const save_data = new Uploads({
             name : pdf_name,
             pdf : publicUrl,
@@ -55,15 +33,7 @@ const upload_pdf =async (req, res) => {
         
         res.status(200).send({data : save_data , pdf_link :publicUrl })
 
-        }).catch(err => {
-            console.error(err);
-            res.status(500).send('Error making file public.');
-        });
-    });
-  
-
-    fs.createReadStream(file.path).pipe(blobStream);
-            }
+                }
 
 }catch(e){res.status(500).send(e.message)}
   
@@ -80,25 +50,29 @@ res.status(200).send(pdf_det)
 
 }
 const delete_pdf = async (req, res) => {
-  try {
-    const pdf_id = req.params.pdf_id;
-    const pdf_det = await Uploads.findByIdAndDelete(pdf_id);
+try {
+        const pdf_id = req.params.pdf_id;
+        const pdf_det = await Uploads.findById(pdf_id);
+        
+        if (!pdf_det) {
+            return res.status(404).send('PDF not found.');
+        }
 
-    if (pdf_det) {
-      if (pdf_det.file_name) {
-        const bucket = admin.storage().bucket();
-        const file = bucket.file(pdf_det.file_name);
-        await file.delete();
-        res.status(200).send("Delete is successful!!");
-      } else {
-        res.status(400).send("PDF filename not specified in the document.");
-      }
-    } else {
-      res.status(404).send("PDF not found.");
+        const photoPath = path.join(__dirname, '..', 'uploads', path.basename(pdf_det.pdf));
+      fs.unlink(photoPath, (err) => {
+          if (err) {
+              console.error('Error deleting question photo:', err);
+          }
+      });
+
+        
+        await Uploads.findByIdAndDelete(pdf_id);
+
+        res.status(200).send("File and database record deleted successfully!");
+    } catch (e) {
+        res.status(500).send(e.message);
     }
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
+
 };
 
 const get_pdfs =  async (req,res)=>{
