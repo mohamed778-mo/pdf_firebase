@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const pdf_upload = require("./router/uploads_router")
+const path = require("path");
 
 const app = express();
 app.use(express.json());
@@ -16,6 +17,8 @@ app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 
 
 app.use('/app/pdf', pdf_upload);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connection();
 
